@@ -1,0 +1,261 @@
+:root {
+  --bg: #f6f5f2;
+  --panel: #ffffff;
+  --ink: #1f2933;
+  --muted: #6b7280;
+  --accent: #7c5cff;
+  --accent-ink: #2e1a6b;
+  --tutor-bubble: #efeaff;
+  --student-bubble: #1f2933;
+  --student-bubble-ink: #ffffff;
+  --border: #e5e2db;
+  --radius: 16px;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+header.topbar {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+header.topbar h1 {
+  font-size: 1.05rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+header.topbar .subtitle {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 24px;
+}
+
+/* --- Formulario de ingreso --- */
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px;
+  max-width: 480px;
+  width: 100%;
+  align-self: center;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+.card h2 { margin-top: 0; font-size: 1.15rem; }
+.card p.help { color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
+
+label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin: 14px 0 6px;
+  color: var(--ink);
+}
+
+input, textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+}
+
+input:focus, textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.problem-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.problem-card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.problem-card:hover { border-color: var(--accent); }
+
+.problem-card.selected {
+  border-color: var(--accent);
+  background: var(--tutor-bubble);
+}
+
+.problem-card .p-title {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.problem-card .p-grade {
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-left: 6px;
+  font-weight: 400;
+}
+
+.problem-card .p-statement {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: white;
+  padding: 11px 20px;
+  margin-top: 18px;
+  width: 100%;
+}
+
+.btn-primary:disabled { opacity: 0.6; cursor: default; }
+
+.btn-secondary {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+}
+
+/* --- Chat --- */
+
+.chat-wrap {
+  max-width: 720px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 90px);
+}
+
+.chat-meta {
+  font-size: 0.8rem;
+  color: var(--muted);
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 4px 2px 16px;
+}
+
+.bubble {
+  max-width: 78%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  line-height: 1.48;
+  font-size: 0.95rem;
+  white-space: pre-wrap;
+}
+
+.bubble.tutor {
+  align-self: flex-start;
+  background: var(--tutor-bubble);
+  color: var(--accent-ink);
+  border-bottom-left-radius: 4px;
+}
+
+.bubble.student {
+  align-self: flex-end;
+  background: var(--student-bubble);
+  color: var(--student-bubble-ink);
+  border-bottom-right-radius: 4px;
+}
+
+.bubble.thinking {
+  align-self: flex-start;
+  background: var(--tutor-bubble);
+  color: var(--muted);
+  font-style: italic;
+}
+
+.composer {
+  display: flex;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.composer textarea {
+  flex: 1;
+  min-height: 46px;
+  max-height: 140px;
+}
+
+.composer button {
+  background: var(--accent);
+  color: white;
+  padding: 0 20px;
+}
+
+.composer button:disabled { opacity: 0.5; }
+
+.error-banner {
+  background: #fdecec;
+  color: #a12622;
+  border: 1px solid #f3c8c6;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+.hidden { display: none !important; }
+
+footer.note {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding: 10px;
+}
