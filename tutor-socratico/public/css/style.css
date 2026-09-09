@@ -1,14 +1,18 @@
 :root {
-  --bg: #f6f5f2;
+  --bg: #f4f6fb;
   --panel: #ffffff;
   --ink: #1f2933;
   --muted: #6b7280;
-  --accent: #7c5cff;
-  --accent-ink: #2e1a6b;
-  --tutor-bubble: #efeaff;
-  --student-bubble: #1f2933;
+  --royal-blue: #1d3fae;
+  --royal-blue-dark: #142d80;
+  --burnt-yellow: #c8860d;
+  --burnt-yellow-dark: #a66d07;
+  --accent: var(--royal-blue);
+  --accent-ink: var(--royal-blue-dark);
+  --tutor-bubble: #e6ebfa;
+  --student-bubble: var(--royal-blue);
   --student-bubble-ink: #ffffff;
-  --border: #e5e2db;
+  --border: #dfe3ee;
   --radius: 16px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
@@ -25,24 +29,47 @@ body {
 }
 
 header.topbar {
-  padding: 18px 24px;
-  border-bottom: 1px solid var(--border);
-  background: var(--panel);
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--royal-blue-dark);
+  background: var(--royal-blue);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.school-logo {
+  height: 42px;
+  width: auto;
+  flex-shrink: 0;
 }
 
 header.topbar h1 {
   font-size: 1.05rem;
   margin: 0;
   font-weight: 600;
+  color: #ffffff;
 }
 
 header.topbar .subtitle {
   font-size: 0.8rem;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.78);
   margin-top: 2px;
+}
+
+header.topbar .btn-secondary {
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+header.topbar .btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.12);
 }
 
 main {
@@ -144,12 +171,15 @@ button {
 }
 
 .btn-primary {
-  background: var(--accent);
-  color: white;
+  background: var(--burnt-yellow);
+  color: #2b1c00;
   padding: 11px 20px;
   margin-top: 18px;
   width: 100%;
+  transition: background 0.15s;
 }
+
+.btn-primary:hover:not(:disabled) { background: var(--burnt-yellow-dark); }
 
 .btn-primary:disabled { opacity: 0.6; cursor: default; }
 
@@ -234,10 +264,13 @@ button {
 }
 
 .composer button {
-  background: var(--accent);
-  color: white;
+  background: var(--burnt-yellow);
+  color: #2b1c00;
   padding: 0 20px;
+  transition: background 0.15s;
 }
+
+.composer button:hover:not(:disabled) { background: var(--burnt-yellow-dark); }
 
 .composer button:disabled { opacity: 0.5; }
 
