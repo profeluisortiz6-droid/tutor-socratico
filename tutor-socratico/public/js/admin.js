@@ -16,9 +16,24 @@ const detailTitle = document.getElementById('detailTitle');
 const detailMeta = document.getElementById('detailMeta');
 const detailMessages = document.getElementById('detailMessages');
 const searchInput = document.getElementById('searchInput');
+const deleteSessionBtn = document.getElementById('deleteSessionBtn');
 
 function authHeaders() {
   return { 'x-admin-password': adminPassword };
+}
+
+function renderMath(el) {
+  if (window.renderMathInElement) {
+    window.renderMathInElement(el, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+      ],
+      throwOnError: false,
+    });
+  }
 }
 
 async function login() {
@@ -60,7 +75,7 @@ async function loadSessions() {
 function renderSessions(sessions) {
   sessionsBody.innerHTML = '';
   if (sessions.length === 0) {
-    sessionsBody.innerHTML = '<tr><td colspan="6" class="muted">Todavía no hay conversaciones registradas.</td></tr>';
+    sessionsBody.innerHTML = '<tr><td colspan="7" class="muted">Todavía no hay conversaciones registradas.</td></tr>';
     return;
   }
   for (const s of sessions) {
@@ -72,10 +87,31 @@ function renderSessions(sessions) {
       <td>${s.message_count}</td>
       <td>${formatDate(s.started_at)}</td>
       <td><span class="status-pill ${s.status}">${s.status === 'active' ? 'activa' : 'finalizada'}</span></td>
+      <td><button class="btn-secondary btn-danger" data-action="delete-row">Eliminar</button></td>
     `;
     tr.addEventListener('click', () => openDetail(s.id));
+    tr.querySelector('[data-action="delete-row"]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      deleteSessionRow(s.id, `${s.student_name} · ${s.student_course}`);
+    });
     sessionsBody.appendChild(tr);
   }
+}
+
+async function deleteSessionRow(id, label) {
+  if (!confirm(`¿Eliminar la conversación de ${label}? Esta acción no se puede deshacer.`)) return;
+  const res = await fetch(`/api/admin/sessions/${id}`, { method: 'DELETE', headers: authHeaders() });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    listError.textContent = data.error || 'No se pudo eliminar la conversación.';
+    listError.classList.remove('hidden');
+    return;
+  }
+  if (currentSessionId === id) {
+    detailWrap.classList.remove('open');
+    currentSessionId = null;
+  }
+  loadSessions();
 }
 
 function formatDate(iso) {
@@ -115,6 +151,7 @@ async function openDetail(sessionId) {
     div.textContent = m.content;
     detailMessages.appendChild(div);
   }
+  renderMath(detailMessages);
 
   const notes = data.notes || {};
   document.getElementById('fluidez').value = notes.fluidez ?? '';
@@ -165,6 +202,10 @@ document.getElementById('passwordInput').addEventListener('keydown', (e) => {
   if (e.key === 'Enter') login();
 });
 document.getElementById('closeDetail').addEventListener('click', () => detailWrap.classList.remove('open'));
+deleteSessionBtn.addEventListener('click', () => {
+  if (!currentSessionId) return;
+  deleteSessionRow(currentSessionId, detailTitle.textContent);
+});
 document.getElementById('saveNotes').addEventListener('click', saveNotes);
 searchInput.addEventListener('input', filterSessions);
 
@@ -217,7 +258,74 @@ const problemsListError = document.getElementById('problemsListError');
 const problemFormError = document.getElementById('problemFormError');
 const cancelEditBtn = document.getElementById('cancelEditBtn');
 const problemFormTitle = document.getElementById('problemFormTitle');
+const pStatementInput = document.getElementById('pStatement');
+const pStatementPreview = document.getElementById('pStatementPreview');
+const problemImagesSection = document.getElementById('problemImagesSection');
+const pImagesInput = document.getElementById('pImagesInput');
+const pImagesError = document.getElementById('pImagesError');
+const pImagesList = document.getElementById('pImagesList');
 let editingProblemId = null;
+
+function renderStatementPreview() {
+  const text = pStatementInput.value.trim();
+  if (!text) {
+    pStatementPreview.innerHTML = '';
+    pStatementPreview.classList.add('hidden');
+    return;
+  }
+  pStatementPreview.classList.remove('hidden');
+  pStatementPreview.textContent = text;
+  renderMath(pStatementPreview);
+}
+
+function renderProblemImages(images) {
+  pImagesList.innerHTML = '';
+  for (const filename of images || []) {
+    const div = document.createElement('div');
+    div.className = 'image-thumb';
+    div.innerHTML = `
+      <img src="/uploads/${encodeURIComponent(filename)}" alt="" />
+      <button type="button" class="btn-secondary btn-danger">Eliminar</button>
+    `;
+    div.querySelector('button').addEventListener('click', () => deleteProblemImage(filename));
+    pImagesList.appendChild(div);
+  }
+}
+
+async function deleteProblemImage(filename) {
+  if (!editingProblemId) return;
+  if (!confirm('¿Eliminar esta imagen?')) return;
+  const res = await fetch(`/api/admin/problems/${editingProblemId}/images/${encodeURIComponent(filename)}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  const data = await res.json();
+  if (res.ok) renderProblemImages(data.images);
+}
+
+pStatementInput.addEventListener('input', renderStatementPreview);
+
+pImagesInput.addEventListener('change', async () => {
+  if (!editingProblemId || !pImagesInput.files.length) return;
+  pImagesError.classList.add('hidden');
+  const formData = new FormData();
+  for (const file of pImagesInput.files) formData.append('images', file);
+  try {
+    const res = await fetch(`/api/admin/problems/${editingProblemId}/images`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: formData,
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'No se pudieron subir las imágenes.');
+    renderProblemImages(data.images);
+  } catch (err) {
+    pImagesError.textContent = err.message;
+    pImagesError.classList.remove('hidden');
+  } finally {
+    pImagesInput.value = '';
+  }
+});
 
 async function loadProblems() {
   problemsListError.classList.add('hidden');
@@ -258,6 +366,7 @@ function renderProblemsAdmin(problems) {
     div.querySelector('[data-action="delete"]').addEventListener('click', () => deleteProblem(p.id, p.title));
     problemsAdminList.appendChild(div);
   }
+  renderMath(problemsAdminList);
 }
 
 function startEditProblem(p) {
@@ -267,6 +376,9 @@ function startEditProblem(p) {
   document.getElementById('pStatement').value = p.statement;
   problemFormTitle.textContent = 'Editar problema';
   cancelEditBtn.classList.remove('hidden');
+  problemImagesSection.classList.remove('hidden');
+  renderProblemImages(p.images);
+  renderStatementPreview();
   document.getElementById('pTitle').scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -277,6 +389,10 @@ function resetProblemForm() {
   document.getElementById('pStatement').value = '';
   problemFormTitle.textContent = 'Publicar un nuevo problema';
   cancelEditBtn.classList.add('hidden');
+  problemImagesSection.classList.add('hidden');
+  pImagesList.innerHTML = '';
+  pImagesError.classList.add('hidden');
+  renderStatementPreview();
 }
 
 async function saveProblem() {
@@ -301,8 +417,8 @@ async function saveProblem() {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'No se pudo guardar el problema.');
-    resetProblemForm();
-    loadProblems();
+    await loadProblems();
+    startEditProblem(data);
   } catch (err) {
     problemFormError.textContent = err.message;
     problemFormError.classList.remove('hidden');

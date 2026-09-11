@@ -15,11 +15,29 @@ const endBtn = document.getElementById('endBtn');
 const problemsLoading = document.getElementById('problemsLoading');
 const problemsEmpty = document.getElementById('problemsEmpty');
 const problemListEl = document.getElementById('problemList');
+const ppTitle = document.getElementById('ppTitle');
+const ppGrade = document.getElementById('ppGrade');
+const ppStatement = document.getElementById('ppStatement');
+const ppImages = document.getElementById('ppImages');
 
 let sessionId = null;
 let sending = false;
 let problems = [];
 let selectedProblemId = null;
+
+function renderMath(el) {
+  if (window.renderMathInElement) {
+    window.renderMathInElement(el, {
+      delimiters: [
+        { left: '$$', right: '$$', display: true },
+        { left: '\\[', right: '\\]', display: true },
+        { left: '$', right: '$', display: false },
+        { left: '\\(', right: '\\)', display: false },
+      ],
+      throwOnError: false,
+    });
+  }
+}
 
 function showError(el, message) {
   el.textContent = message;
@@ -77,6 +95,7 @@ function renderProblems() {
     card.addEventListener('click', () => selectProblem(p.id));
     problemListEl.appendChild(card);
   }
+  renderMath(problemListEl);
 }
 
 function selectProblem(id) {
@@ -91,6 +110,25 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str ?? '';
   return div.innerHTML;
+}
+
+function renderProblemPanel(problem) {
+  ppTitle.textContent = problem.title;
+  ppGrade.textContent = problem.grade || '';
+  ppGrade.classList.toggle('hidden', !problem.grade);
+  ppStatement.textContent = problem.statement || '';
+
+  ppImages.innerHTML = '';
+  const images = Array.isArray(problem.images) ? problem.images : [];
+  for (const filename of images) {
+    const img = document.createElement('img');
+    img.src = `/uploads/${encodeURIComponent(filename)}`;
+    img.alt = problem.title;
+    img.loading = 'lazy';
+    ppImages.appendChild(img);
+  }
+
+  renderMath(ppStatement);
 }
 
 async function startSession() {
@@ -124,6 +162,7 @@ async function startSession() {
     setupSection.classList.add('hidden');
     chatSection.classList.remove('hidden');
 
+    renderProblemPanel(data.problem);
     addBubble('student', `Voy a trabajar: ${data.problem.title}`);
     addBubble('tutor', data.tutorReply);
     composerInput.focus();
