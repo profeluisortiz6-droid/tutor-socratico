@@ -6,6 +6,9 @@
   <title>Semillero Matemáticas FANAMA</title>
   <link rel="icon" href="img/Escudo%20FANAMA.jpg" />
   <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -46,16 +49,28 @@
     </section>
 
     <!-- Chat -->
-    <section id="chatSection" class="chat-wrap hidden">
-      <div class="chat-meta">
-        <span id="chatWho"></span>
-        <button id="endBtn" class="btn-secondary">Terminar sesión</button>
-      </div>
-      <div id="chatError" class="error-banner hidden"></div>
-      <div id="messages" class="messages"></div>
-      <div class="composer">
-        <textarea id="composerInput" placeholder="Escribe tu idea o tu pregunta..." rows="1"></textarea>
-        <button id="sendBtn">Enviar</button>
+    <section id="chatSection" class="chat-layout hidden">
+      <!-- Panel izquierdo: el problema, siempre visible durante la sesión -->
+      <aside id="problemPanel" class="problem-panel card">
+        <div class="problem-panel-label">Estás trabajando en:</div>
+        <h2 id="ppTitle" class="pp-title"></h2>
+        <div id="ppGrade" class="pp-grade"></div>
+        <div id="ppStatement" class="pp-statement"></div>
+        <div id="ppImages" class="pp-images"></div>
+      </aside>
+
+      <!-- Panel derecho: la conversación -->
+      <div class="chat-wrap">
+        <div class="chat-meta">
+          <span id="chatWho"></span>
+          <button id="endBtn" class="btn-secondary">Terminar sesión</button>
+        </div>
+        <div id="chatError" class="error-banner hidden"></div>
+        <div id="messages" class="messages"></div>
+        <div class="composer">
+          <textarea id="composerInput" placeholder="Escribe tu idea o tu pregunta..." rows="1"></textarea>
+          <button id="sendBtn">Enviar</button>
+        </div>
       </div>
     </section>
   </main>

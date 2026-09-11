@@ -6,6 +6,9 @@
   <title>Panel docente · Tutor Socrático</title>
   <link rel="icon" href="img/escudo-fanama.png" />
   <link rel="stylesheet" href="css/admin.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -52,6 +55,7 @@
             <th>Turnos</th>
             <th>Inicio</th>
             <th>Estado</th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="sessionsBody"></tbody>
@@ -59,6 +63,7 @@
 
       <div id="detailWrap" class="detail-wrap card">
         <button class="btn" id="closeDetail" style="margin-bottom:12px;">Cerrar detalle</button>
+        <button class="btn-secondary btn-danger" id="deleteSessionBtn" style="margin-bottom:12px; margin-left:8px;">Eliminar conversación</button>
         <h2 id="detailTitle"></h2>
         <p class="muted" id="detailMeta"></p>
 
@@ -113,10 +118,26 @@
           <input id="pGrade" type="text" placeholder="Ej: 9° o 10-A" />
 
           <label for="pStatement">Enunciado del problema</label>
+          <p class="muted" style="margin:0 0 4px;">
+            Puedes usar LaTeX para ecuaciones: escribe <code>$x^2 + 1$</code> para fórmulas en línea o
+            <code>$$\frac{a}{b}$$</code> para fórmulas centradas.
+          </p>
           <textarea id="pStatement" rows="4" placeholder="Escribe el problema completo tal como lo verá el estudiante..."></textarea>
+          <div id="pStatementPreview" class="latex-preview"></div>
 
           <button class="btn" id="saveProblemBtn" style="margin-top:12px;">Publicar problema</button>
           <button class="btn-secondary hidden" id="cancelEditBtn" style="margin-top:12px; margin-left:8px;">Cancelar edición</button>
+
+          <div id="problemImagesSection" class="hidden" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border);">
+            <label>Imágenes del problema (PNG, JPG, GIF, WEBP o SVG — por ejemplo, exportadas desde PSTricks)</label>
+            <p class="muted" style="margin:0 0 8px;">
+              PSTricks no se puede mostrar directamente en la página. Compílalo en tu editor de LaTeX,
+              exporta el resultado como imagen y súbela aquí.
+            </p>
+            <input id="pImagesInput" type="file" accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml" multiple />
+            <div id="pImagesError" class="error-banner hidden" style="margin-top:8px;"></div>
+            <div id="pImagesList" class="image-thumb-list"></div>
+          </div>
         </div>
 
         <div id="problemsListError" class="error-banner hidden"></div>
