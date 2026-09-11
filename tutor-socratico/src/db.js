@@ -74,6 +74,14 @@ if (!sessionColumns.some((c) => c.name === 'problem_id')) {
   db.exec(`ALTER TABLE sessions ADD COLUMN problem_id INTEGER REFERENCES problems(id)`);
 }
 
+// Migración: agrega la columna "images" a "problems" (lista de nombres de
+// archivo, en JSON) para poder adjuntar imágenes (por ejemplo, gráficas
+// hechas en PSTricks y exportadas como imagen) a un enunciado.
+const problemColumns = db.prepare(`PRAGMA table_info(problems)`).all();
+if (!problemColumns.some((c) => c.name === 'images')) {
+  db.exec(`ALTER TABLE problems ADD COLUMN images TEXT NOT NULL DEFAULT '[]'`);
+}
+
 // ---- Consultas preparadas ----------------------------------------------
 
 const stmts = {
@@ -133,7 +141,26 @@ const stmts = {
       updated_at = datetime('now')
   `),
   getNotes: db.prepare(`SELECT * FROM session_notes WHERE session_id = ?`),
+  setProblemImages: db.prepare(`UPDATE problems SET images = ? WHERE id = ?`),
+  deleteNotesForSession: db.prepare(`DELETE FROM session_notes WHERE session_id = ?`),
+  deleteMessagesForSession: db.prepare(`DELETE FROM messages WHERE session_id = ?`),
+  deleteSession: db.prepare(`DELETE FROM sessions WHERE id = ?`),
 };
+
+// Los problemas guardan "images" como JSON en la base de datos; estas
+// funciones convierten hacia/desde un arreglo de nombres de archivo para
+// que el resto del código nunca tenga que pensar en el JSON directamente.
+function parseProblemRow(row) {
+  if (!row) return row;
+  let images = [];
+  try {
+    images = JSON.parse(row.images || '[]');
+    if (!Array.isArray(images)) images = [];
+  } catch (_) {
+    images = [];
+  }
+  return { ...row, images };
+}
 
 function findOrCreateStudent(name, course) {
   const existing = stmts.findStudent.get(name.trim(), course.trim());
@@ -155,7 +182,7 @@ function createProblem({ title, statement, grade }) {
     grade: grade ? grade.trim() : null,
     active: 1,
   });
-  return stmts.getProblem.get(info.lastInsertRowid);
+  return parseProblemRow(stmts.getProblem.get(info.lastInsertRowid));
 }
 
 function updateProblem(id, { title, statement, grade, active }) {
@@ -168,7 +195,7 @@ function updateProblem(id, { title, statement, grade, active }) {
     grade: grade != null ? grade.trim() : existing.grade,
     active: active != null ? (active ? 1 : 0) : existing.active,
   });
-  return stmts.getProblem.get(id);
+  return parseProblemRow(stmts.getProblem.get(id));
 }
 
 function setProblemActive(id, active) {
@@ -188,15 +215,52 @@ function deleteProblem(id) {
 }
 
 function getProblem(id) {
-  return stmts.getProblem.get(id);
+  return parseProblemRow(stmts.getProblem.get(id));
 }
 
 function listAllProblems() {
-  return stmts.listAllProblems.all();
+  return stmts.listAllProblems.all().map(parseProblemRow);
 }
 
 function listActiveProblems() {
-  return stmts.listActiveProblems.all();
+  return stmts.listActiveProblems.all().map(parseProblemRow);
+}
+
+// Agrega un nombre de archivo de imagen (ya guardado en disco por la ruta
+// de subida) a la lista de imágenes de un problema.
+function addProblemImage(id, filename) {
+  const problem = getProblem(id);
+  if (!problem) return null;
+  const images = [...problem.images, filename];
+  stmts.setProblemImages.run(JSON.stringify(images), id);
+  return getProblem(id);
+}
+
+// Quita una imagen de la lista del problema (el archivo en disco se borra
+// aparte, desde server.js, para mantener esta capa enfocada en la BD).
+function removeProblemImage(id, filename) {
+  const problem = getProblem(id);
+  if (!problem) return null;
+  const images = problem.images.filter((f) => f !== filename);
+  stmts.setProblemImages.run(JSON.stringify(images), id);
+  return getProblem(id);
+}
+
+// Elimina por completo una sesión y todo lo que depende de ella (mensajes
+// y evaluación cualitativa), para que el docente pueda depurar el panel de
+// conversaciones. A diferencia de los problemas, aquí sí se borra de verdad:
+// una conversación de prueba o duplicada no tiene el mismo valor de
+// conservarse que un problema ya usado por varios estudiantes.
+function deleteSession(sessionId) {
+  const existing = getSession(sessionId);
+  if (!existing) return { deleted: false };
+  const tx = db.transaction(() => {
+    stmts.deleteNotesForSession.run(sessionId);
+    stmts.deleteMessagesForSession.run(sessionId);
+    stmts.deleteSession.run(sessionId);
+  });
+  tx();
+  return { deleted: true };
 }
 
 function getSession(sessionId) {
@@ -246,6 +310,7 @@ module.exports = {
   addMessage,
   getHistory,
   endSession,
+  deleteSession,
   listSessions,
   listStudents,
   saveNotes,
@@ -257,4 +322,6 @@ module.exports = {
   getProblem,
   listAllProblems,
   listActiveProblems,
+  addProblemImage,
+  removeProblemImage,
 };
