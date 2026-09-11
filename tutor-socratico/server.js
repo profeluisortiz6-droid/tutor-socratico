@@ -8,6 +8,8 @@ require('dotenv').config();
 
 const express = require('express');
 const path = require('path');
+const fs = require('fs');
+const multer = require('multer');
 const { randomUUID } = require('crypto');
 
 const db = require('./src/db');
@@ -18,8 +20,32 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || null;
 
+// Las imágenes que el docente adjunta a un problema (por ejemplo, una
+// gráfica hecha en PSTricks y exportada como PNG) se guardan en la misma
+// carpeta de datos persistente que la base de datos (DATA_DIR), para que
+// sobrevivan a un redespliegue igual que las conversaciones guardadas.
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
+if (!fs.existsSync(UPLOADS_DIR)) fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+
+const ALLOWED_IMAGE_TYPES = new Set(['image/png', 'image/jpeg', 'image/gif', 'image/webp', 'image/svg+xml']);
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, UPLOADS_DIR),
+    filename: (req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '';
+      cb(null, `${randomUUID()}${ext}`);
+    },
+  }),
+  limits: { fileSize: 8 * 1024 * 1024, files: 5 },
+  fileFilter: (req, file, cb) => {
+    cb(null, ALLOWED_IMAGE_TYPES.has(file.mimetype));
+  },
+});
+
 app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(UPLOADS_DIR));
 
 // ---------------------------------------------------------------------
 // Middleware de autenticación simple para el panel docente.
@@ -53,6 +79,7 @@ app.get('/api/problems', (req, res) => {
     title: p.title,
     statement: p.statement,
     grade: p.grade,
+    images: p.images,
   }));
   res.json(problems);
 });
@@ -183,6 +210,16 @@ app.post('/api/admin/sessions/:id/notes', requireAdmin, (req, res) => {
   res.json({ ok: true });
 });
 
+// Elimina por completo una conversación (mensajes + evaluación incluidos).
+// Pensado para que el docente pueda depurar el panel: borrar pruebas,
+// duplicados o conversaciones que ya no necesita conservar.
+app.delete('/api/admin/sessions/:id', requireAdmin, (req, res) => {
+  const session = db.getSession(req.params.id);
+  if (!session) return res.status(404).json({ error: 'Sesión no encontrada.' });
+  db.deleteSession(req.params.id);
+  res.json({ ok: true });
+});
+
 // ---- Banco de problemas (gestión docente) ----------------------------
 
 app.get('/api/admin/problems', requireAdmin, (req, res) => {
@@ -217,6 +254,44 @@ app.delete('/api/admin/problems/:id', requireAdmin, (req, res) => {
   if (!problem) return res.status(404).json({ error: 'Problema no encontrado.' });
   const result = db.deleteProblem(req.params.id);
   res.json(result);
+});
+
+// Sube una o varias imágenes (por ejemplo, una gráfica hecha en PSTricks y
+// exportada como PNG) y las adjunta al enunciado de un problema. El
+// enunciado en sí sigue siendo texto (con LaTeX entre $...$ para fórmulas);
+// las imágenes se muestran aparte, debajo del enunciado.
+app.post('/api/admin/problems/:id/images', requireAdmin, (req, res) => {
+  const problem = db.getProblem(req.params.id);
+  if (!problem) return res.status(404).json({ error: 'Problema no encontrado.' });
+
+  upload.array('images', 5)(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({ error: err.message || 'No se pudieron subir las imágenes.' });
+    }
+    const files = req.files || [];
+    if (!files.length) {
+      return res.status(400).json({ error: 'No se recibió ninguna imagen válida (PNG, JPG, GIF, WEBP o SVG).' });
+    }
+    let updated = problem;
+    for (const file of files) {
+      updated = db.addProblemImage(req.params.id, file.filename);
+    }
+    res.json(updated);
+  });
+});
+
+// Quita una imagen de un problema y borra el archivo del disco.
+app.delete('/api/admin/problems/:id/images/:filename', requireAdmin, (req, res) => {
+  const problem = db.getProblem(req.params.id);
+  if (!problem) return res.status(404).json({ error: 'Problema no encontrado.' });
+  const { filename } = req.params;
+  const updated = db.removeProblemImage(req.params.id, filename);
+  const filePath = path.join(UPLOADS_DIR, filename);
+  // path.join normaliza "..": si alguien manda un filename raro no se sale de UPLOADS_DIR.
+  if (filePath.startsWith(UPLOADS_DIR) && fs.existsSync(filePath)) {
+    fs.unlink(filePath, () => {});
+  }
+  res.json(updated);
 });
 
 // Exporta todas las conversaciones en CSV (una fila por mensaje) para
