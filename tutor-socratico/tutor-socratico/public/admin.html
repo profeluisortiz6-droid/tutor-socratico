@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Panel docente · Tutor Socrático</title>
+  <link rel="icon" href="img/escudo-fanama.png" />
+  <link rel="stylesheet" href="css/admin.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <img src="img/escudo-fanama.png" alt="Escudo Colegio Facundo Navas Mantilla" class="school-logo" />
+      <h1>Panel docente — Tutor Socrático</h1>
+    </div>
+    <a href="/">← Volver al tutor</a>
+  </header>
+
+  <main>
+    <!-- Login -->
+    <section id="loginCard" class="card login-card">
+      <h2>Acceso docente</h2>
+      <p class="muted">Ingresa la contraseña configurada en el servidor (ADMIN_PASSWORD).</p>
+      <div id="loginError" class="error-banner hidden"></div>
+      <input id="passwordInput" type="password" placeholder="Contraseña" />
+      <button id="loginBtn">Entrar</button>
+    </section>
+
+    <!-- Panel -->
+    <section id="panel" class="hidden">
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="conversaciones">Conversaciones</button>
+        <button class="tab-btn" data-tab="problemas">Banco de problemas</button>
+      </div>
+
+      <div id="tabConversaciones" class="tab-panel">
+      <div class="toolbar">
+        <input id="searchInput" type="text" placeholder="Buscar por estudiante o curso..." />
+        <div class="spacer"></div>
+        <a id="exportCsv" class="btn" href="#">Exportar CSV</a>
+        <a id="exportJson" class="btn" href="#">Exportar JSON</a>
+      </div>
+
+      <div id="listError" class="error-banner hidden"></div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Estudiante</th>
+            <th>Curso</th>
+            <th>Tema</th>
+            <th>Turnos</th>
+            <th>Inicio</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="sessionsBody"></tbody>
+      </table>
+
+      <div id="detailWrap" class="detail-wrap card">
+        <button class="btn" id="closeDetail" style="margin-bottom:12px;">Cerrar detalle</button>
+        <h2 id="detailTitle"></h2>
+        <p class="muted" id="detailMeta"></p>
+
+        <div class="messages" id="detailMessages"></div>
+
+        <h3>Evaluación de creatividad matemática</h3>
+        <p class="muted">Calificación cualitativa del docente para análisis posterior (1 = mínima, 5 = destacada).</p>
+        <div class="notes-grid">
+          <div>
+            <label for="fluidez">Fluidez</label>
+            <select id="fluidez">
+              <option value="">—</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </div>
+          <div>
+            <label for="flexibilidad">Flexibilidad</label>
+            <select id="flexibilidad">
+              <option value="">—</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </div>
+          <div>
+            <label for="originalidad">Originalidad</label>
+            <select id="originalidad">
+              <option value="">—</option>
+              <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option>
+            </select>
+          </div>
+          <div class="full">
+            <label for="comentario">Comentario / observaciones</label>
+            <textarea id="comentario" rows="3"></textarea>
+          </div>
+          <div class="full">
+            <button class="btn" id="saveNotes">Guardar evaluación</button>
+            <span id="notesSaved" class="muted hidden">Guardado ✓</span>
+          </div>
+        </div>
+      </div>
+      </div>
+
+      <div id="tabProblemas" class="tab-panel hidden">
+        <div class="card" style="margin-bottom:20px;">
+          <h2 id="problemFormTitle">Publicar un nuevo problema</h2>
+          <p class="muted">Los estudiantes solo pueden elegir problemas que publiques aquí. El tutor limitará toda la conversación a este enunciado.</p>
+          <div id="problemFormError" class="error-banner hidden"></div>
+
+          <label for="pTitle">Título</label>
+          <input id="pTitle" type="text" placeholder="Ej: El jardín rectangular" />
+
+          <label for="pGrade">Grado / curso (opcional)</label>
+          <input id="pGrade" type="text" placeholder="Ej: 9° o 10-A" />
+
+          <label for="pStatement">Enunciado del problema</label>
+          <textarea id="pStatement" rows="4" placeholder="Escribe el problema completo tal como lo verá el estudiante..."></textarea>
+
+          <button class="btn" id="saveProblemBtn" style="margin-top:12px;">Publicar problema</button>
+          <button class="btn-secondary hidden" id="cancelEditBtn" style="margin-top:12px; margin-left:8px;">Cancelar edición</button>
+        </div>
+
+        <div id="problemsListError" class="error-banner hidden"></div>
+        <div id="problemsAdminList"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>

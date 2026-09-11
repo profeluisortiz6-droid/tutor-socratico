@@ -1,0 +1,24 @@
+{
+  "name": "tutor-socratico",
+  "version": "1.0.0",
+  "description": "Tutor socrático basado en IA generativa para desarrollar creatividad matemática en estudiantes de bachillerato colombiano, con panel docente para análisis de conversaciones.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "educación",
+    "matemáticas",
+    "tutor socrático",
+    "IA generativa"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.124.0",
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  }
+}
