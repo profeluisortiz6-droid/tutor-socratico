@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tutor Socrático de Matemáticas</title>
+  <link rel="icon" href="img/escudo-fanama.png" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-brand">
+      <img src="img/escudo-fanama.png" alt="Escudo Colegio Facundo Navas Mantilla" class="school-logo" />
+      <div>
+        <h1>Tutor Socrático de Matemáticas</h1>
+        <div class="subtitle">Piensa, explora y descubre — no te doy la respuesta, te ayudo a encontrarla</div>
+      </div>
+    </div>
+    <a href="/admin" class="btn-secondary" style="text-decoration:none; display:inline-block;">Panel docente</a>
+  </header>
+
+  <main>
+    <!-- Formulario de ingreso -->
+    <section id="setup" class="card">
+      <h2>Antes de empezar</h2>
+      <p class="help">
+        Tus conversaciones con el tutor se guardan para que tu profesor(a) pueda revisarlas
+        y entender mejor cómo piensas los problemas matemáticos. Sé honesto y anímate a
+        explorar: aquí no hay respuestas "malas", solo ideas por probar.
+      </p>
+
+      <div id="setupError" class="error-banner hidden"></div>
+
+      <label for="name">Tu nombre</label>
+      <input id="name" type="text" placeholder="Ej: Laura Gómez" autocomplete="off" />
+
+      <label for="course">Tu curso</label>
+      <input id="course" type="text" placeholder="Ej: 10-A" autocomplete="off" />
+
+      <label for="problemList">Elige el problema que vas a trabajar</label>
+      <div id="problemsLoading" class="help">Cargando problemas disponibles…</div>
+      <div id="problemsEmpty" class="help hidden">Tu profesor(a) todavía no ha publicado problemas para trabajar. Vuelve a intentarlo más tarde.</div>
+      <div id="problemList" class="problem-list hidden"></div>
+
+      <button id="startBtn" class="btn-primary" disabled>Empezar a conversar</button>
+    </section>
+
+    <!-- Chat -->
+    <section id="chatSection" class="chat-wrap hidden">
+      <div class="chat-meta">
+        <span id="chatWho"></span>
+        <button id="endBtn" class="btn-secondary">Terminar sesión</button>
+      </div>
+      <div id="chatError" class="error-banner hidden"></div>
+      <div id="messages" class="messages"></div>
+      <div class="composer">
+        <textarea id="composerInput" placeholder="Escribe tu idea o tu pregunta..." rows="1"></textarea>
+        <button id="sendBtn">Enviar</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="note">Tutor Socrático · Proyecto de investigación educativa</footer>
+
+  <script src="js/chat.js"></script>
+</body>
+</html>
